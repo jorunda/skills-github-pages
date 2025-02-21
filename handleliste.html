@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delbar Handleliste</title>
+    <style>
+        :root {
+            --primary-color: #4a6da7;
+            --accent-color: #5d9c59;
+            --light-bg: #f8f9fa;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 2.2rem;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .input-container {
+            display: flex;
+        }
+        
+        #new-item {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        #new-item:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        #add-button {
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        #add-button:hover {
+            background-color: #3c5a8a;
+        }
+        
+        .suggestions-container {
+            position: relative;
+        }
+        
+        .suggestions-button {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: var(--light-bg);
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .suggestions-button:after {
+            content: '▼';
+            font-size: 0.8em;
+        }
+        
+        .suggestions-dropdown {
+            display: none;
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 10;
+        }
+        
+        .suggestions-category {
+            padding: 8px 15px;
+            background-color: var(--light-bg);
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f0f8ff;
+        }
+        
+        .list-container {
+            background-color: var(--light-bg);
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            padding: 10px;
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+        
+        .list-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .counter {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: white;
+            margin-bottom: 8px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        li:hover {
+            transform: translateX(5px);
+        }
+        
+        .item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        .checkbox:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .checkbox:checked:after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: -2px;
+            left: 3px;
+            font-size: 14px;
+        }
+        
+        .item-text {
+            flex: 1;
+            transition: color 0.2s;
+        }
+        
+        .completed .item-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+        
+        .delete-btn {
+            background-color: transparent;
+            color: #e74c3c;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .delete-btn:hover {
+            opacity: 1;
+        }
+        
+        .share-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .share-title {
+            color: var(--primary-color);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .share-description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .share-field {
+            display: flex;
+            margin-bottom: 0;
+        }
+        
+        #share-url {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            font-size: 0.9rem;
+            background-color: var(--light-bg);
+        }
+        
+        #copy-button {
+            padding: 12px 20px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        #copy-button:hover {
+            background-color: #4a8a47;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .app-container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>Delbar Handleliste</h1>
+        
+        <div class="input-section">
+            <div class="suggestions-container">
+                <button class="suggestions-button" id="suggestions-button">Velg fra vanlige varer</button>
+                <div class="suggestions-dropdown" id="suggestions-dropdown">
+                    <div class="suggestions-category">Frukt og grønt</div>
+                    <div class="suggestion-item">Epler</div>
+                    <div class="suggestion-item">Bananer</div>
+                    <div class="suggestion-item">Poteter</div>
+                    <div class="suggestion-item">Gulrøtter</div>
+                    <div class="suggestion-item">Løk</div>
+                    <div class="suggestion-item">Agurk</div>
+                    <div class="suggestion-item">Tomater</div>
+                    <div class="suggestion-item">Salat</div>
+                    
+                    <div class="suggestions-category">Meieriprodukter</div>
+                    <div class="suggestion-item">Melk</div>
+                    <div class="suggestion-item">Egg</div>
+                    <div class="suggestion-item">Ost</div>
+                    <div class="suggestion-item">Yoghurt</div>
+                    <div class="suggestion-item">Smør</div>
+                    <div class="suggestion-item">Fløte</div>
+                    
+                    <div class="suggestions-category">Kjøtt og fisk</div>
+                    <div class="suggestion-item">Kyllingfilet</div>
+                    <div class="suggestion-item">Kjøttdeig</div>
+                    <div class="suggestion-item">Bacon</div>
+                    <div class="suggestion-item">Laks</div>
+                    <div class="suggestion-item">Pølser</div>
+                    
+                    <div class="suggestions-category">Tørrvarer</div>
+                    <div class="suggestion-item">Pasta</div>
+                    <div class="suggestion-item">Ris</div>
+                    <div class="suggestion-item">Brød</div>
+                    <div class="suggestion-item">Mel</div>
+                    <div class="suggestion-item">Sukker</div>
+                    <div class="suggestion-item">Havregryn</div>
+                    
+                    <div class="suggestions-category">Drikke</div>
+                    <div class="suggestion-item">Kaffe</div>
+                    <div class="suggestion-item">Te</div>
+                    <div class="suggestion-item">Juice</div>
+                    <div class="suggestion-item">Brus</div>
+                    <div class="suggestion-item">Mineralvann</div>
+                    
+                    <div class="suggestions-category">Annet</div>
+                    <div class="suggestion-item">Toalettpapir</div>
+                    <div class="suggestion-item">Tannkrem</div>
+                    <div class="suggestion-item">Shampo</div>
+                    <div class="suggestion-item">Vaskemiddel</div>
+                    <div class="suggestion-item">Oppvaskmiddel</div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="new-item" placeholder="Legg til vare...">
+                <button id="add-button">Legg til</button>
+            </div>
+        </div>
+        
+        <div class="list-container">
+            <div class="list-header">
+                <h2 class="list-title">Min handleliste</h2>
+                <span class="counter" id="items-counter">0 varer</span>
+            </div>
+            <ul id="shopping-list"></ul>
+        </div>
+        
+        <div class="share-container">
+            <h3 class="share-title">Del listen din</h3>
+            <p class="share-description">Kopier lenken nedenfor og del den med venner eller familie</p>
+            <div class="share-field">
+                <input type="text" id="share-url" readonly>
+                <button id="copy-button">Kopier</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">Lenke kopiert til utklippstavlen!</div>
+
+    <script>
+        // Last inn handlelisten fra URL-parametere eller start med tom liste
+        function loadListFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const listParam = params.get('list');
+            
+            if (listParam) {
+                try {
+                    return JSON.parse(decodeURIComponent(listParam));
+                } catch (e) {
+                    console.error("Kunne ikke laste inn liste fra URL", e);
+                    return [];
+                }
+            }
+            return [];
+        }
+
+        // Oppdater delelenken basert på gjeldende liste
+        function updateShareURL() {
+            const encodedList = encodeURIComponent(JSON.stringify(shoppingList));
+            const shareURL = `${window.location.origin}${window.location.pathname}?list=${encodedList}`;
+            document.getElementById('share-url').value = shareURL;
+            updateItemCounter();
+        }
+
+        // Oppdater antall varer i listen
+        function updateItemCounter() {
+            const counter = document.getElementById('items-counter');
+            const count = shoppingList.length;
+            counter.textContent = count === 1 ? "1 vare" : `${count} varer`;
+        }
+
+        // Render handlelisten
+        function renderList() {
+            const listElement = document.getElementById('shopping-list');
+            listElement.innerHTML = '';
+            
+            shoppingList.forEach((item, index) => {
+                const li = document.createElement('li');
+                if (item.completed) {
+                    li.classList.add('completed');
+                }
+                
+                const itemContent = document.createElement('div');
+                itemContent.classList.add('item-content');
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.classList.add('checkbox');
+                checkbox.checked = item.completed;
+                checkbox.addEventListener('change', () => toggleItem(index));
+                
+                const itemText = document.createElement('span');
+                itemText.classList.add('item-text');
+                itemText.textContent = item.text;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.title = 'Slett vare';
+                deleteBtn.addEventListener('click', () => deleteItem(index));
+                
+                itemContent.appendChild(checkbox);
+                itemContent.appendChild(itemText);
+                
+                li.appendChild(itemContent);
+                li.appendChild(deleteBtn);
+                listElement.appendChild(li);
+            });
+            
+            updateShareURL();
+        }
+
+        // Legg til nytt element i listen
+        function addItem() {
+            const input = document.getElementById('new-item');
+            const text = input.value.trim();
+            
+            if (text) {
+                shoppingList.push({ text, completed: false });
+                input.value = '';
+                renderList();
+            }
+        }
+
+        // Slette element fra listen
+        function deleteItem(index) {
+            shoppingList.splice(index, 1);
+            renderList();
+        }
+
+        // Marker element som fullført/ufullført
+        function toggleItem(index) {
+            shoppingList[index].completed = !shoppingList[index].completed;
+            renderList();
+        }
+
+        // Kopier delelenken til utklippstavlen
+        function copyShareURL() {
+            const shareURL = document.getElementById('share-url');
+            shareURL.select();
+            document.execCommand('copy');
+            
+            // Vis bekreftelse
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Håndter forslagsdropdown
+        function toggleSuggestionsDropdown() {
+            const dropdown = document.getElementById('suggestions-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function addSuggestion(text) {
+            document.getElementById('new-item').value = text;
+            document.getElementById('suggestions-dropdown').style.display = 'none';
+        }
+
+        // Initialiser appen
+        let shoppingList = loadListFromURL();
+        renderList();
+
+        // Legg til hendelseslyttere
+        document.getElementById('add-button').addEventListener('click', addItem);
+        document.getElementById('new-item').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addItem();
+        });
+        document.getElementById('copy-button').addEventListener('click', copyShareURL);
+        document.getElementById('suggestions-button').addEventListener('click', toggleSuggestionsDropdown);
+        
+        // Legg til hendelseslyttere for forslagselementer
+        document.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', () => addSuggestion(item.textContent));
+        });
+        
+        // Lukk dropdown når man klikker utenfor
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('suggestions-dropdown');
+            const button = document.getElementById('suggestions-button');
+            
+            if (dropdown.style.display === 'block' && 
+                !dropdown.contains(e.target) && 
+                e.target !== button) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
